@@ -1,0 +1,899 @@
+//Declaring required data models,packages and assigning them to variables
+
+var churchmodel = require('../model/churchmodel');
+var ministrymodel = require('../model/ministrymodel.js');
+var skillsmodel = require('../model/skillsmodel.js');
+var session = require('client-sessions');
+var md5 = require('md5');
+
+
+//tried to implement JQUERY snd JAVASCRIPT frontend access to serversid
+// using Version 5.4.1
+//  var jsdom = require('jsdom').jsdom;
+// //  var document = jsdom('<html></html>', {});
+//  var window = document.defaultView;
+//  var $ = require('jquery')(window);
+var express = require('express');
+var http = require('http');
+var bcrypt = require('bcrypt');
+// var categoryfun = require('../views/pages/newskill.ejs')findCat();
+var router = express.Router();
+var current;
+var Users = require('../model/ChurchParishionermodule');//For Sessions
+module.exports = router;
+router.get('/', function (req, res) {
+  res.render('index');
+});
+
+
+//variable declared for assigning user id and use it as a cookie
+var puserid = "";
+//Routes for static pages
+router.get('/admin', function (req, res) {
+  res.render('admin');
+});
+router.get('/pleaseLogIn', function (req, res) {
+  res.render('pleaseLogIn');
+});
+router.get('/adminViewMinistry', function (req, res) {
+  res.render('adminViewMinistry');
+});
+router.get('/adminInactiveMinistries', function (req, res) {
+  res.render('adminInactiveMinistries');
+});
+router.get('/adminDeleteMinistry', function (req, res) {
+  res.render('adminDeleteMinistry');
+});
+router.get('/adminViewSkills', function (req, res) {
+  res.render('adminViewSkills');
+});
+router.get('/adminDeleteSkills', function (req, res) {
+  res.render('adminDeleteSkills');
+});
+router.get('/adminDeleteUser', function (req, res) {
+  res.render('adminDeleteUser');
+});
+router.get('/contact', function (req, res) {
+  res.render('contact');
+});
+// router.get('/ministries',function(req,res){
+//   res.render('ministries');
+// });
+router.get('/skillReport', function (req, res) {
+  res.render('skillReport');
+});
+router.get('/ministrySurvey', function (req, res) {
+  res.render('ministrySurvey');
+});
+router.get('/manageUser', function (req, res) {
+  res.render('manageUser');
+});
+router.get('/events', function (req, res) {
+  res.render('events');
+});
+
+router.get('/ministry', function (req, res) {
+  res.render('ministry');
+});
+router.get('/ministryNoLogin', function (req, res) {
+  res.render('ministryNoLogin');
+});
+// router.get('/skillSurvey',function(req,res){
+//   res.render('skillSurvey');
+// });
+router.get('/Ministrytest', function (req, res) {
+  res.render('Ministrytest');
+});
+router.get('/ReportSkillSurvey',function(req,res){
+
+  res.render('ReportSkillSurvey');
+  
+  });
+  
+  router.get('/ReportMinistrySurvey',function(req,res){
+  
+  res.render('ReportMinistrySurvey');
+  });  
+router.get('/ministry2', function (req, res) {
+  res.render('ministry2');
+});
+router.get('/admin', function (req, res) {
+  res.render('admin');
+});
+router.get('/newuser', function (req, res) {
+  res.render('newuser', {
+    errorMessage1: ""
+  });
+});
+
+router.get('/newministry', function (req, res) {
+  res.render('newministry', {
+    errorMessage2: ""
+  });
+});
+router.get('/passwordreset', function (req, res) {
+  res.render('Passwordreset');
+});
+router.get('/ministry3', function (req, res) {
+  res.render('ministry3');
+});
+router.get('/Min_Lead', function (req, res) {
+  res.render('Min_Lead');
+});
+router.get('/Min_Lead', function (req, res) {
+  res.render('Min_Lead');
+});
+router.get('/chart', function (req, res) {
+  res.render('chart')
+});
+
+router.get('/newskill', function (req, res) {
+  res.render('newskill', {
+    errorMessage3: ""
+  });
+});
+router.get('/adminprofile', function (req, res) {
+  res.render('adminprofile');
+});
+router.get('/ministryEdit', function (req, res) {
+  res.render('ministryEdit');
+});
+
+
+//N/A 
+router.get('/login', function (req, res) {
+  res.render('login', {
+    errorMessage: ""
+  });
+});
+
+//use sessions for tracking logins
+// app.use(session({
+//   secret: 'work hard',
+//   resave: true,
+//   saveUninitialized: false
+// }));
+
+
+//Password hashing variables to declare number of salt rounds
+const saltRounds = 10;
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+const someOtherPlaintextPassword = 'not_bacon';
+
+//Post method to create new user by Admin.
+router.post("/newuser", function (req, res) {
+  //Gathering input data from admin create user task
+  console.log(req.body);
+  var user = new churchmodel();
+  Parishionerid = req.body.pid;
+
+  var password = md5(req.body.password);
+  // bcrypt.hash(password, saltRounds, function (err, hash) {
+  //   // Store hash in your password DB.
+  // });
+
+
+  churchmodel.find({ PID: Parishionerid }, function (err, results) {
+    if (results.length > 0) {
+
+      console.log('parishioner id already exists');
+      res.render("newuser");
+
+    }
+
+    else {
+      user.PID = req.body.pid;
+      user.Firstname = req.body.fname;
+      user.Lastname = req.body.lname;
+      user.Email = req.body.email;
+      user.Password = md5(req.body.password);
+      user.usertype = "user";
+
+      user.save(function (err, result) {
+        if (!err) {
+          console.log("User created successfully");
+          res.render('newuser', {
+            errorMessage1: "User created successfully"
+          });
+        }
+
+        else {
+          console.log(err);
+        }
+      });
+    }
+  });
+});
+
+
+//POST method for login 
+router.post('/login', function (req, res) {
+  //let id = req.params.id;
+  var username = req.body.uname;
+  current = username;
+  var password =md5(req.body.psw);
+  console.log("password is"+password);
+
+  churchmodel.find({ Email: username, Password: password }, [], function (err, results) {
+    if (!results.length) {
+      // $("#abc").html("incorrect password");
+      // req.session.user = user;
+      res.render('login', {
+        errorMessage: "Please Enter Valid Entries"
+      });
+
+     
+    }
+    
+    else if(results[0].usertype=="admin")
+      {
+            res.render('admin');
+     }
+     else if(results[0].usertype=="minlead")
+     {
+      puserid = results[0]._id;
+      console.log(results);
+     res.render("Min_Lead", { parishioner: results });
+     console.log("details are" + puserid);
+     // return next();
+   }
+    
+    else {
+       puserid = results[0]._id;
+       console.log(results);
+      res.render("parishioner", { parishioner: results });
+      console.log("details are" + puserid);
+      // return next();
+    }
+  });
+});
+
+router.get('/parishioner', function (req, res) {
+  churchmodel.find({ _id:puserid }, [], function (err, results) {
+    if (!results.length) {
+      // $("#abc").html("incorrect password");
+      // req.session.user = user;
+      res.render('login', {
+        // errorMessage: "Please Enter Valid Entries"
+      });
+
+
+    } else {
+       puserid = results[0]._id;
+       console.log(results);
+      res.render("parishioner", { parishioner: results });
+      console.log("details are" + puserid);
+      // return next();
+    }
+  });
+});
+router.get("/ReportSkillSurveyView",
+function(req,res){
+
+skillsmodel.find({}, ["Skill_Name","Skill_Category"] ,
+function(err,
+results){
+
+console.log("skills",
+results);
+
+res.render("ReportSkillSurvey", {skillslist:
+results});
+
+});
+
+});
+router.get("/ReportMinistrySurveyView",
+function(req,res){
+
+ministrymodel.find({}, ["minisrtyname"] ,
+function(err,
+results){
+
+console.log("minsitries",
+results);
+
+res.render("ReportMinistrySurvey", {ministrylist:
+results});
+
+});
+
+});
+
+router.post("/newministry", function (req, res) {
+  // console.log(req.body);
+  var ministry = new ministrymodel();
+  let m_name = req.body.Mname;
+
+
+
+
+  ministrymodel.find({ minisrtyname: m_name }, function (err, results) {
+    if (results.length > 0) {
+
+      console.log("Ministry already exists");
+
+
+    }
+
+    else {
+      // ministry. = req.body.pid;
+      // ministry.ministryid = rand;
+      ministry.minisrtyname = req.body.Mname;
+      ministry.lead = req.body.m_lead;
+      ministry.mission = req.body.mission;
+      ministry.description = req.body.description;
+
+
+      ministry.save(function (err, result) {
+        if (!err) {
+
+          console.log("Ministry created successfully");
+          res.render('newministry', {
+            errorMessage2: "Ministry created successfully"
+          });
+        }
+        else {
+          console.log(err);
+        }
+      });
+    }
+
+  });
+
+
+
+});
+
+
+router.get('/ministryEdit', function (req, res) {
+  res.render('ministryEdit');
+});
+
+
+router.get("/allministries", function (req, res) {
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("ministries", { ministrylist: results });
+  });
+});
+
+router.get("/ministryviewadmin", function (req, res) {
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("adminViewMinistry", { ministrylist: results });
+  });
+});
+
+router.get("/ministriess", function (req, res) {
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("ministriesWithLogin", { ministrylist: results });
+  });
+});
+
+
+
+
+router.get("/ministry/:id", function (req, res) {
+  ministrymodel.findOne({ _id: req.params.id }, function (err, result) {
+    if (!err) {
+      res.render("ministry", { ministry: result });
+    }
+  });
+});
+
+router.get("/ministryee/:id", function (req, res) {
+  ministrymodel.findOne({ minisrtyname: req.params.id }, function (err, result) {
+    if (!err) {
+      res.render("ministry", { ministry: result });
+    }
+  });
+});
+
+router.get("/ministryEdit/:id", function (req, res) {
+  ministrymodel.findOne({ _id: req.params.id }, function (err, result) {
+    if (!err) {
+      res.render("ministryEdit", { ministry: result });
+    }
+  });
+});
+
+router.get("/ministryNoLogin/:id", function (req, res) {
+  ministrymodel.findOne({ _id: req.params.id }, function (err, result) {
+    if (!err) {
+      res.render("ministryNoLogin", { ministry: result });
+    }
+  });
+});
+
+
+
+
+
+
+
+// var cheerio = require('cheerio'),
+// $ = cheerio.load('file.ejs'),
+// fs = require('fs');
+
+
+
+router.post("/newskill", function (req, res) {
+  // console.log(req.body);
+  var skill = new skillsmodel();
+  let skillname = req.body.sname;
+  let skillcat = req.body.cat1;
+  console.log(req.body.selectpicker);
+
+
+  skillsmodel.find({ Skill_Name: skillname }, function (err, results) {
+    if (results.length > 0) {
+
+      console.log(req.body.selectpicker);
+
+
+    }
+
+    else {
+      // ministry. = req.body.pid;
+      // ministry.ministryid = rand;
+      skill.Skill_Name = req.body.sname;
+      skill.Skill_Category = req.body.cat1;
+      // skill.Cat_Id = req.body.mission;
+      // skill.skill_Id =  req.body.description;
+
+
+      skill.save(function (err, result) {
+        if (!err) {
+
+          console.log("skill created successfully");
+          res.render('newskill', {
+            errorMessage3: "Skill created successfully"
+          });
+        }
+        else {
+          console.log(err);
+        }
+      });
+    }
+
+  });
+
+
+
+});
+
+router.post("/updateuser", function (req, res) {
+  let user = {
+    "name": req.body.uname,
+    "address":req.body.pAddress,
+    "Email": req.body.mail
+
+    
+  };
+
+ churchmodel.update({_id: puserid}, user, function(err, result){
+   if(!err){
+       res.redirect('back');
+   }
+});
+
+});
+
+
+
+
+//method to display skills in skill survey page
+router.get("/allskills", function (req, res) {
+  skillsmodel.find({}, ["Skill_Name", "Skill_Category"], function (err, results) {
+    console.log("skills", results);
+    res.render("skillSurvey", { skillslist: results });
+  });
+});
+
+//skill survey updating by the user
+router.post("/updateskills", function (req, res) {
+  let skills = {
+    "skills":req.body.scheckBox14
+  };
+
+ churchmodel.update({_id: puserid}, skills, function(err, result){
+   if(!err){
+       res.redirect('/parishioner');
+   }
+});
+ console.log(req.body.scheckBox14);
+ console.log(skills);
+});
+
+
+
+router.get("/ministriessurvey", function (req, res) {
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("ministrySurvey", { ministrylist: results });
+  });
+});
+
+router.get("/inactiveministries", function (req, res) {
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("adminInactiveMinistries", { ministrylist: results });
+  });
+});
+
+
+
+
+
+
+//code to test surveypages viewministries
+
+// router.post('/ministrytest',function(req,res){
+//   // var parsed = JSON.parse(survey);
+//   // console.log('Survey data:', parsed);
+//   var mlist = req.body.ministry;
+//   for(var i =0; i<mlist.length;i++){  console.log(mlist[i]);}
+
+//   console.log(req.body.ministry);
+//   // res.render("/skillSurvey")
+//   // res.render('Ministrytest');
+// });
+
+//get method for delete skills
+router.get("/deleteskills", function (req, res) {
+  skillsmodel.find({}, ["Skill_Name", "Skill_Category"], function (err, results) {
+    console.log("skills", results);
+    res.render("adminDeleteSkills", { skillslist: results });
+  });
+});
+
+router.post("/deleteskillsAdmin", function (req, res) {
+  var skillslist = req.body.scheckBox14;
+  console.log(req.body.scheckBox14);
+  for(var i =0; i<skillslist.length;i++){  console.log(skillslist[i]);}
+  for (var i = 0; i < skillslist.length; i++) {
+    var myquery = { Skill_Name: skillslist[i] };
+    skillsmodel.remove(myquery, function (err, obj) {
+      if (err) throw err;
+      console.log(obj.result.n + " document(s) deleted");
+      // db.close();
+
+    });
+
+  }
+
+  console.log(req.body.scheckBox14);
+  res.redirect('back');
+});
+
+//Ministry survey updated by the parishioner
+router.post("/minsurvey", function (req, res) {
+  var mlist = {
+    "ministries":req.body.ministry
+    
+  };
+  churchmodel.update({_id: puserid}, mlist, function(err, result){
+    if(!err){
+      res.redirect('/parishioner');
+      console.log(mlist);
+    }
+});
+});
+
+
+
+
+//get method for skillsviewadmin
+router.get("/skillsviewadmin", function (req, res) {
+  skillsmodel.find({}, ["Skill_Name", "Skill_Category"], function (err, results) {
+    console.log("skills", results);
+    res.render("adminViewSkills", { skillslist: results });
+  });
+});
+
+router.get("/skillsReportView", function (req, res) {
+  churchmodel.find({}, ["Firstname", "Lastname" , "Email" , "skills"], function (err, results) {
+    console.log("skills", results);
+    res.render("skillReport", { user: results });
+  });
+});
+
+router.get("/ministryReportView", function (req, res) {
+  churchmodel.find({}, ["Firstname", "Lastname" , "Email" , "ministries"], function (err, results) {
+    console.log("skills", results);
+    res.render("ministryReport", { user: results });
+  });
+});
+
+router.get("/ReportSkillSurveyView", function (req, res) {
+  skillsmodel.find({}, ["Skill_Name", "Skill_Category"], function (err, results) {
+    console.log("skills", results);
+    res.render("ReportSkillSurvey", { skillslist: results });
+  });
+});
+
+
+router.get("/ReportMinistrySurveyView", function (req, res) {
+  
+  ministrymodel.find({}, ["minisrtyname"], function (err, results) {
+    console.log("minsitries", results);
+    res.render("ReportMinistrySurvey", { ministrylist: results });
+  });
+});
+
+
+
+
+
+
+
+router.post("/deleteuser", function (req, res) {
+  let email ={Email:req.body.uname};
+
+ churchmodel.deleteOne({Email: email}, function(err, result){
+   if(!err){
+       res.redirect('back');
+       console.log(req.body.uname + " deleted succesfully");
+   }
+});
+ console.log(req.body.uname);
+ 
+});
+
+
+
+
+router.post("/updateministrypage", function (req, res) {
+  let ministry = {
+    "activity": [req.body.activities],
+    "contact":req.body.leadcontact,
+    "update":req.body.updates
+  };
+  res.redirect('back');
+  console.log(ministry);
+//   ministrymodel.update({minisrtyname: req.body.mname}, ministry, function(err, result){
+//    if(!err){
+//        res.redirect('back');
+//        console.log();
+//    }
+// });
+
+});
+
+
+
+
+router.get('/exp', function (req, res) {
+  res.render('exp');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//post method for updateskills
+// router.post("/updateskills", function (req, res) {
+//   var skillslist = req.body.scheckBox14;
+//   for (var i = 0; i < skillslist.length; i++) {
+//     console.log(skillslist[i]);
+//   }
+
+//   console.log(req.body.scheckBox14);
+//   console.log("still need to work//Skillsurvey");
+// });
+
+
+//post method for updateministries
+
+// router.post("/updateministries", function (req, res) {
+//   var mlist = req.body.inacministry;
+//   for (var i = 0; i < mlist.length; i++) {
+//     console.log(mlist[i].value);
+//   }
+
+//   console.log(req.body.inacministry);
+//   console.log("still need to work//Skillsurvey");
+  
+// });
+
+
+//For Sessions***********************************************************************
+//rout for creating a using sessionss
+// router.get('/SessionAdminCreatUser', function (req, res) {
+//   res.render('SessionAdminCreatUser', {
+//     errorMessage1: ""
+//   });
+// });
+
+
+// //post request for creating user using sessions
+// router.post('/SessionAdminCreatUser', function (req, res, next) {
+//   // confirm that user typed same password twice
+//   if (req.body.password !== req.body.repassword) {
+//     var err = new Error('Passwords do not match.');
+//     err.status = 400;
+//     res.send("passwords dont match");
+//     return next(err);
+//   }
+
+//   if (req.body.pid &&
+//     //    req.body.username&&
+//     req.body.fname &&
+//     req.body.lname &&
+//     req.body.email &&
+//     req.body.password &&
+//     req.body.repassword) {
+
+//     var usersData = {
+//       PID: req.body.pid,
+//       username: req.body.username,
+//       Firstname: req.body.fname,
+//       Lastname: req.body.lname,
+//       Email: req.body.email,
+//       password: req.body.password,
+//     }
+
+//     Users.create(usersData, function (error, users) {
+//       if (error) {
+//         return next(error);
+//       } else {
+//         console.log("User created successfully");
+//         res.render('SessionAdminCreatUser', {
+//           errorMessage1: "User created successfully"
+//         });
+//       }
+//     });
+
+//   }
+//   else {
+//     var err = new Error('All fields required.');
+//     err.status = 400;
+//     return next(err);
+//   }
+// })
+
+
+// //rout for sessionLogin Page***********************************************
+// router.get('/SessionLogin', function (req, res) {
+
+//   res.render('SessionLogin', {
+//     errorMessage: ""
+//   });
+
+
+// });
+
+// //POST route for checking user data before login
+// router.post('/SessionLogin', function (req, res, next) {
+//   if (req.body.uname && req.body.psw) //if both email and pasword gields are present
+//   {
+
+//     Users.authenticate(req.body.uname, req.body.psw, function (error, users) {
+//       if (error || !users) {
+
+//         res.render('SessionLogin', {
+//           errorMessage: "Please Enter Valid Entries"
+//         });
+//         // var err = new Error('Wrong email or password.');
+//         // err.status = 401;
+//         // return next(err);
+//       }
+//       else {
+
+//         req.session.userId = users._id;
+//         //  return res.redirect('/profile');
+//         console.log("session details are" + req.session.userId)
+//         res.render("sessionParishioner", { parishioner: users });// sessions code here was ' return res.redirect('/profile');'
+//         console.log("details are" + users);
+//       }
+//     });
+//   }
+//   else {
+//     var err = new Error('All fields required.');
+//     err.status = 400;
+//     return next(err);
+//   }
+// })
+
+
+// router.get('/sessionParishioner', function (req, res) {
+
+
+//   User.findById(req.session.userId)
+//     .exec(function (error, users) {
+//       if (error) {
+//         return next(error);
+//       } else {
+//         if (users === null) {
+//           var err = new Error('Not authorized! Go back!');
+//           err.status = 400;
+//           return next(err);
+//         } else {
+//           res.render('parishioner', {
+//             user: current
+//           });
+
+//         }
+//       }
+//     });
+// });
+
+
+// router.get('/logout', function (req, res, next) {
+//   if (req.session) {
+//     // delete session object
+//     req.session.destroy(function (err) {
+//       if (err) {
+//         return next(err);
+//       } else {
+//         return res.redirect('/SessionLogin');
+//       }
+//     });
+//   }
+// });
+// // End for sessions
+// //session internal test code
+// function requiresLogin(req, res, next) {
+//   if (req.session && req.session.userId) {
+//     return next();
+//   } else {
+//     var err = new Error('You must be logged in to view this page.');
+//     err.status = 401;
+//     return next(res.render('SessionLogin', {
+//       errorMessage: "You need to be logged in to access this page"
+//     })
+//     );
+//   }
+// }
+
+// router.get('/req', requiresLogin, function (req, res, next) {
+
+//   res.render('requireslog');
+// });
+
+// module.exports = router;
+// // end of session login test code
+// // testing database integration
+// router.post('/sessionParishioner', function (req, res, next) {// code needs to be modified to match the database update***********
+//   if (req.body.uname && req.body.psw) //if both email and pasword gields are present
+//   {
+
+//     Users.authenticate(req.body.uname, req.body.psw, function (error, users) {
+//       if (error || !users) {
+
+//         res.render('SessionLogin', {
+//           errorMessage: "Please Enter Valid Entries"
+//         });
+//         // var err = new Error('Wrong email or password.');
+//         // err.status = 401;
+//         // return next(err);
+//       }
+//       else {
+
+//         req.session.userId = users._id;
+//         //  return res.redirect('/profile');
+//         console.log("session details are" + req.session.userId)
+//         res.render("sessionParishioner", { parishioner: users });// sessions code here was ' return res.redirect('/profile');'
+//         console.log("details are" + users);
+//       }
+//     });
+//   }
+//   else {
+//     var err = new Error('All fields required.');
+//     err.status = 400;
+//     return next(err);
+//   }
+// })
+//   // end of session databes code(note complete yet)
